@@ -219,7 +219,7 @@ function usarDatosFinales() {
   document.getElementById('loadingInicial').style.display = 'none';
   document.getElementById('contenidoPrincipal').style.display = 'block';
   document.getElementById('horaActualizacion').textContent =
-    FECHA_CIERRE.toLocaleString('es-GT', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short'}) + ' · cierre';
+    FECHA_CIERRE.toLocaleString('es-GT', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short', year:'numeric'}) + ' · cierre';
 }
 
 function buscarActualizacion(manual) {
@@ -244,7 +244,7 @@ function buscarActualizacion(manual) {
         usandoDatosFinales = false;
         renderizar(anonimo);
         document.getElementById('horaActualizacion').textContent =
-          new Date().toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit'}) + ' · actualizado';
+          new Date().toLocaleString('es-GT', {hour:'2-digit', minute:'2-digit', year:'numeric'}) + ' · actualizado';
       }
     } catch(e) {
       if (manual) mostrarError('No se pudo actualizar (' + e.message + '). Se mantienen los resultados finales.');
