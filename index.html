@@ -213,6 +213,9 @@
     user-select: none;
   }
   .opcion label:hover { border-color: var(--verde-medio); background: var(--verde-claro); }
+  /* Modo lectura: opciones deshabilitadas */
+  .opcion input[type="radio"]:disabled + label { cursor: default; opacity: 0.75; }
+  .opcion input[type="radio"]:disabled + label:hover { border-color: var(--borde); background: transparent; }
   .opcion input:checked + label.si {
     background: var(--verde-claro);
     border-color: var(--verde-medio);
@@ -370,17 +373,17 @@
 
 <div class="form-container">
   <div class="badge-instruccion">
-    <strong>🔒 Encuesta finalizada.</strong> El período de votación cerró el <strong>29 de marzo de 2026</strong> con <strong>110 votos</strong> registrados. ¡Gracias por participar!
+    <strong>🔒 Encuesta finalizada.</strong> El período de votación cerró el <strong>29 de marzo de 2026</strong> con <strong>110 votos</strong> registrados. ¡Gracias por participar! A continuación puede consultar las preguntas que se sometieron a votación, en modo de solo lectura.
   </div>
 
   <div style="text-align:center;margin:18px 0 6px;">
     <a href="stats.html" class="btn-enviar" style="display:inline-block;text-decoration:none;">📊 Ver resultados finales</a>
   </div>
 
-  <div id="formArea" class="form-area oculto">
+  <div id="formArea" class="form-area">
 
-    <!-- Identificación -->
-    <div class="id-card">
+    <!-- Identificación (oculta: solo lectura) -->
+    <div class="id-card" style="display:none">
       <h2>🪪 Sus datos</h2>
       <div class="campo-grupo">
         <div class="campo">
@@ -394,8 +397,8 @@
       </div>
     </div>
 
-    <!-- Barra de progreso -->
-    <div class="progreso-container">
+    <!-- Barra de progreso (oculta: solo lectura) -->
+    <div class="progreso-container" style="display:none">
       <div class="progreso-info">
         <span id="progresoTexto">0 de 8 preguntas respondidas</span>
         <span id="porcentaje">0%</span>
@@ -405,11 +408,13 @@
       </div>
     </div>
 
+    <h2>📋 Preguntas sometidas a votación</h2>
+
     <div id="preguntasContainer"></div>
 
-    <div class="alerta-error" id="alertaError"></div>
+    <div class="alerta-error" id="alertaError" style="display:none"></div>
 
-    <button class="btn-enviar" id="btnEnviar" onclick="enviarVoto()">
+    <button class="btn-enviar" id="btnEnviar" onclick="enviarVoto()" style="display:none">
       <span class="spinner"></span>
       Registrar mi voto
     </button>
@@ -478,13 +483,13 @@ preguntas.forEach((p, i) => {
       <div class="pregunta-desc">${p.desc}</div>
       <div class="opciones">
         <div class="opcion">
-          <input type="radio" name="p${n}" id="p${n}si" value="Sí" onchange="actualizarProgreso()">
+          <input type="radio" name="p${n}" id="p${n}si" value="Sí" disabled onchange="actualizarProgreso()">
           <label for="p${n}si" class="si">
             <span class="check-icon">✓</span> Sí, apruebo
           </label>
         </div>
         <div class="opcion">
-          <input type="radio" name="p${n}" id="p${n}no" value="No" onchange="actualizarProgreso()">
+          <input type="radio" name="p${n}" id="p${n}no" value="No" disabled onchange="actualizarProgreso()">
           <label for="p${n}no" class="no">
             <span class="check-icon">✗</span> No apruebo
           </label>
