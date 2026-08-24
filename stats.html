@@ -143,8 +143,8 @@
         <div class="resumen-label">Proyectos aprobados</div>
       </div>
       <div class="resumen-card">
-        <div class="resumen-numero" id="horaActualizacion">—</div>
-        <div class="resumen-label">Última actualización</div>
+        <div class="resumen-numero" id="fechaCierre">—</div>
+        <div class="resumen-label" id="detalleCierre">Última actualización</div>
       </div>
     </div>
 
@@ -218,8 +218,10 @@ function usarDatosFinales() {
   renderizar(DATOS_FINALES);
   document.getElementById('loadingInicial').style.display = 'none';
   document.getElementById('contenidoPrincipal').style.display = 'block';
-  document.getElementById('horaActualizacion').textContent =
-    FECHA_CIERRE.toLocaleString('es-GT', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short', year:'numeric'}) + ' · cierre';
+  document.getElementById('fechaCierre').textContent =
+    FECHA_CIERRE.toLocaleString('es-GT', {day:'2-digit', month:'short'});
+  document.getElementById('detalleCierre').textContent =
+    'Cierre ' + FECHA_CIERRE.getFullYear() + ' · ' + FECHA_CIERRE.toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit'});
 }
 
 function buscarActualizacion(manual) {
@@ -243,8 +245,10 @@ function buscarActualizacion(manual) {
         datosGlobales = anonimo;
         usandoDatosFinales = false;
         renderizar(anonimo);
-        document.getElementById('horaActualizacion').textContent =
-          new Date().toLocaleString('es-GT', {hour:'2-digit', minute:'2-digit', year:'numeric'}) + ' · actualizado';
+        document.getElementById('fechaCierre').textContent =
+          new Date().toLocaleString('es-GT', {day:'2-digit', month:'short'});
+        document.getElementById('detalleCierre').textContent =
+          'Actualizado · ' + new Date().toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit'});
       }
     } catch(e) {
       if (manual) mostrarError('No se pudo actualizar (' + e.message + '). Se mantienen los resultados finales.');
