@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultados Finales — Votación Condominio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --verde: #1a6b4a;
+    --verde-claro: #e8f5ef;
+    --verde-medio: #2d9166;
+    --rojo: #c0392b;
+    --rojo-claro: #fdecea;
+    --oro: #c4992a;
+    --oro-claro: #faf3e0;
+    --texto: #1c2b22;
+    --texto-suave: #4a6355;
+    --borde: #c8ddd3;
+    --bg: #f5f9f6;
+    --blanco: #ffffff;
+    --sombra: 0 2px 20px rgba(26,107,74,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--texto); }
+
+  header {
+    background: var(--verde);
+    color: white;
+    padding: 28px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .header-left h1 { font-family: 'DM Serif Display', serif; font-size: clamp(20px,4vw,28px); font-weight: 400; margin-bottom: 4px; }
+  .header-left p { font-size: 13px; opacity: 0.75; }
+  .btn-actualizar {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    color: white; padding: 10px 20px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-actualizar:hover { background: rgba(255,255,255,0.25); }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .cargando .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .main { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .banner-cerrada { background: var(--oro-claro); border: 1px solid #e3d19a; color: #6b5200; border-radius: 12px; padding: 14px 18px; font-size: 13.5px; margin-bottom: 22px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .resumen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin-bottom: 32px; }
+  .resumen-card { background: var(--blanco); border: 1px solid var(--borde); border-radius: 14px; padding: 22px 16px; text-align: center; box-shadow: var(--sombra); }
+  .resumen-numero { font-family: 'DM Serif Display', serif; font-size: 42px; color: var(--verde); line-height: 1; margin-bottom: 6px; }
+  .resumen-label { font-size: 11.5px; color: var(--texto-suave); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4; }
+
+  .seccion-titulo { font-family: 'DM Serif Display', serif; font-size: 21px; font-weight: 400; color: var(--verde); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--borde); }
+
+  /* Dona */
+  .grafica-resumen { background: var(--blanco); border: 1px solid var(--borde); border-radius: 14px; padding: 24px; margin-bottom: 28px; box-shadow: var(--sombra); display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+  @media (max-width: 560px) { .grafica-resumen { grid-template-columns: 1fr; } }
+  .dona-container { position: relative; max-width: 210px; margin: 0 auto; }
+  .dona-centro { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; }
+  .dona-numero { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--verde); line-height: 1; }
+  .dona-label { font-size: 11px; color: var(--texto-suave); margin-top: 2px; }
+  .leyenda-lista { list-style: none; }
+  .leyenda-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef2ef; font-size: 14px; }
+  .leyenda-item:last-child { border-bottom: none; }
+  .leyenda-punto { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .leyenda-nombre { flex: 1; color: var(--texto); }
+  .leyenda-pct { font-weight: 600; color: var(--texto-suave); font-size: 13px; }
+
+  /* Barras agrupadas */
+  .grafica-barras-container { background: var(--blanco); border: 1px solid var(--borde); border-radius: 14px; padding: 24px; margin-bottom: 28px; box-shadow: var(--sombra); }
+  .grafica-barras-container canvas { max-height: 300px; }
+
+  /* Cards detalle */
+  .preguntas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 32px; }
+  @media (max-width: 620px) { .preguntas-grid { grid-template-columns: 1fr; } }
+  .pregunta-card { background: var(--blanco); border: 1px solid var(--borde); border-radius: 14px; padding: 18px 20px; box-shadow: var(--sombra); }
+  .pcard-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
+  .pcard-titulo { font-weight: 600; font-size: 13.5px; color: var(--texto); line-height: 1.35; flex: 1; }
+  .pcard-num { font-size: 11px; color: var(--texto-suave); font-weight: 600; background: var(--bg); padding: 2px 7px; border-radius: 99px; flex-shrink: 0; }
+  .ganador-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; margin-bottom: 12px; }
+  .ganador-si { background: var(--verde-claro); color: var(--verde); }
+  .ganador-no { background: var(--rojo-claro); color: var(--rojo); }
+  .ganador-empate { background: var(--oro-claro); color: #7a5c00; }
+  .barra-fila { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .barra-fila:last-of-type { margin-bottom: 0; }
+  .barra-etiqueta { font-size: 12px; font-weight: 600; width: 28px; flex-shrink: 0; }
+  .barra-bg { flex: 1; height: 24px; background: #eef2ef; border-radius: 6px; overflow: hidden; }
+  .barra-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding: 0 8px; font-size: 12px; font-weight: 600; color: white; transition: width 1s cubic-bezier(0.25,1,0.5,1); min-width: 2px; white-space: nowrap; }
+  .barra-si { background: linear-gradient(90deg,#2d9166,#1a6b4a); }
+  .barra-no { background: linear-gradient(90deg,#e05050,#c0392b); }
+  .barra-num { font-size: 12px; color: var(--texto-suave); width: 46px; text-align: right; flex-shrink: 0; }
+  .votos-total { font-size: 11px; color: var(--texto-suave); margin-top: 10px; text-align: right; }
+
+  .estado-vacio { text-align: center; padding: 56px 24px; color: var(--texto-suave); }
+  .estado-vacio .icono { font-size: 40px; margin-bottom: 14px; }
+  .estado-vacio p { font-size: 14px; line-height: 1.6; }
+
+  #loadingInicial { text-align: center; padding: 80px 24px; color: var(--texto-suave); }
+  .spinner-grande { width: 40px; height: 40px; border: 3px solid var(--borde); border-top-color: var(--verde); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  #contenidoPrincipal { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>📊 Panel de Resultados</h1>
+    <p>Votación Condominio — Asamblea de Residentes · <strong>Encuesta finalizada</strong></p>
+  </div>
+  <button class="btn-actualizar" id="btnActualizar" onclick="buscarActualizacion(true)">
+    <span class="spinner" id="spinnerActualizar"></span>
+    🔄 Buscar actualizaciones
+  </button>
+</header>
+
+<div class="main">
+
+  <div id="loadingInicial">
+    <div class="spinner-grande"></div>
+    <p>Cargando resultados...</p>
+  </div>
+
+  <div id="contenidoPrincipal">
+
+    <div class="banner-cerrada">🔒 <span><strong>Encuesta finalizada.</strong> Estos son los resultados oficiales con <strong><span id="totalFinales">—</span> votos</strong> registrados al cierre.</span></div>
+
+    <div class="resumen-grid">
+      <div class="resumen-card">
+        <div class="resumen-numero" id="totalVotos">0</div>
+        <div class="resumen-label">Votos registrados</div>
+      </div>
+      <div class="resumen-card">
+        <div class="resumen-numero" id="aprobadosTotal">—</div>
+        <div class="resumen-label">Proyectos aprobados</div>
+      </div>
+      <div class="resumen-card">
+        <div class="resumen-numero" id="horaActualizacion">—</div>
+        <div class="resumen-label">Última actualización</div>
+      </div>
+    </div>
+
+    <div class="seccion-titulo">🍩 Panorama general</div>
+    <div class="grafica-resumen">
+      <div class="dona-container">
+        <canvas id="graficaDona"></canvas>
+        <div class="dona-centro">
+          <div class="dona-numero" id="donaNumero">—</div>
+          <div class="dona-label">proyectos</div>
+        </div>
+      </div>
+      <ul class="leyenda-lista" id="leyendaDona"></ul>
+    </div>
+
+    <div class="seccion-titulo">📊 Comparativa por proyecto</div>
+    <div class="grafica-barras-container">
+      <canvas id="graficaBarras"></canvas>
+    </div>
+
+    <div class="seccion-titulo">🗳️ Detalle por proyecto</div>
+    <div class="preguntas-grid" id="preguntasGrid"></div>
+
+  </div>
+
+  <div id="errorBox" style="display:none;background:#fdecea;border:1px solid #f0a0a0;border-radius:12px;padding:20px 24px;margin-top:16px;color:#a02020;font-size:14px;"></div>
+
+</div>
+
+<script>
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzm60EJapIbXLUDv4-F-dFksH7NX5C082BS2y72jV_D85n-Cw1UabqpDhn1YRHKkF4Q/exec";
+
+const PREGUNTAS_CORTAS = ["Pozo","Techo club","Talud","Cuarto policías","Salones","Arrendamiento","Muro perimetral","Riego"];
+const PREGUNTAS_COMPLETAS = [
+  "Pozo — Mantenimiento",
+  "Cambio de techo de casa club",
+  "Talud",
+  "Cuarto para policías de garita",
+  "Salones sociales detrás de casa club",
+  "Políticas de arrendamiento",
+  "Muro perimetral con vallas autosustentables",
+  "Sistema de riego"
+];
+
+let datosGlobales = [];
+let chartDona = null;
+let chartBarras = null;
+let usandoDatosFinales = true;
+
+// ============================================================
+// RESULTADOS FINALES OFICIALES
+// La encuesta cerró el 29-mar-2026. Estos datos quedan guardados
+// aquí para que la página siempre muestre los resultados, aunque
+// el servidor (Apps Script) ya no responda.
+// ============================================================
+const DATOS_FINALES = [{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","No","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","Sí","No","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","Sí","No","Sí"]},{"respuestas":["Sí","No","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","No","No","Sí","Sí","No","No","Sí"]},{"respuestas":["Sí","No","Sí","Sí","No","No","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","No","No","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","No","No","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","No","Sí","Sí","No","Sí","Sí"]},{"respuestas":["Sí","Sí","No","Sí","No","No","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","No","No","Sí","No","Sí","No"]},{"respuestas":["Sí","Sí","No","Sí","No","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","Sí","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","Sí","No","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","No","No","No","No","No"]},{"respuestas":["Sí","Sí","Sí","No","No","No","No","Sí"]},{"respuestas":["Sí","Sí","No","Sí","Sí","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","No","No","No","Sí"]},{"respuestas":["Sí","Sí","Sí","No","No","Sí","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","No","Sí","No","No","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","No","Sí","No","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","No","Sí","Sí","Sí","Sí","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","No","Sí","Sí","No","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","No","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","No","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","No","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","No","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","No","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","No","No","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","No","No","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","No","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","No","No","Sí"]},{"respuestas":["Sí","Sí","Sí","No","Sí","Sí","No","No"]},{"respuestas":["Sí","No","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["No","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","No","No","No"]},{"respuestas":["Sí","Sí","Sí","Sí","No","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","Sí","No","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","No","No","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","No","Sí"]},{"respuestas":["Sí","Sí","Sí","No","No","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","No","No","Sí","Sí","No"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","No","Sí","No","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","No","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","Sí","No","Sí"]},{"respuestas":["Sí","Sí","No","No","No","Sí","No","No"]},{"respuestas":["Sí","No","Sí","Sí","Sí","Sí","No","Sí"]},{"respuestas":["Sí","No","Sí","No","Sí","Sí","No","No"]},{"respuestas":["Sí","No","Sí","No","No","Sí","Sí","Sí"]},{"respuestas":["Sí","Sí","Sí","Sí","Sí","No","No","Sí"]}];
+
+const FECHA_CIERRE = new Date('2026-03-29T14:18:27Z');
+
+window.addEventListener('load', cargarDatos);
+
+function cargarDatos() {
+  usarDatosFinales();
+  buscarActualizacion(false);
+}
+
+function usarDatosFinales() {
+  datosGlobales = DATOS_FINALES;
+  usandoDatosFinales = true;
+  document.getElementById('totalFinales').textContent = DATOS_FINALES.length;
+  renderizar(DATOS_FINALES);
+  document.getElementById('loadingInicial').style.display = 'none';
+  document.getElementById('contenidoPrincipal').style.display = 'block';
+  document.getElementById('horaActualizacion').textContent =
+    FECHA_CIERRE.toLocaleString('es-GT', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short'}) + ' · cierre';
+}
+
+function buscarActualizacion(manual) {
+  const btn = document.getElementById('btnActualizar');
+  const spinner = document.getElementById('spinnerActualizar');
+  btn.classList.add('cargando');
+  spinner.style.display = 'block';
+  if (manual) document.getElementById('errorBox').style.display = 'none';
+
+  const callbackName = 'jsonpCb_' + Date.now();
+  const script = document.createElement('script');
+
+  window[callbackName] = function(data) {
+    try {
+      if (data && data.error) throw new Error(data.error);
+      const arr = Array.isArray(data) ? data : Object.values(data || {});
+      // Privacidad: solo se conservan las respuestas, nunca datos personales
+      const anonimo = arr.map(v => ({ respuestas: (v && v.respuestas) || [] }));
+      // Solo reemplaza los resultados fijos si hay más votos registrados en el servidor
+      if (anonimo.length > datosGlobales.length) {
+        datosGlobales = anonimo;
+        usandoDatosFinales = false;
+        renderizar(anonimo);
+        document.getElementById('horaActualizacion').textContent =
+          new Date().toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit'}) + ' · actualizado';
+      }
+    } catch(e) {
+      if (manual) mostrarError('No se pudo actualizar (' + e.message + '). Se mantienen los resultados finales.');
+    } finally {
+      btn.classList.remove('cargando');
+      spinner.style.display = 'none';
+      delete window[callbackName];
+      script.remove();
+    }
+  };
+
+  script.onerror = function() {
+    if (manual) mostrarError('Sin conexión con el servidor. Se muestran los resultados finales guardados.');
+    btn.classList.remove('cargando');
+    spinner.style.display = 'none';
+    delete window[callbackName];
+    script.remove();
+  };
+
+  script.src = APPS_SCRIPT_URL + '?action=getAll&callback=' + callbackName + '&t=' + Date.now();
+  document.head.appendChild(script);
+}
+
+function mostrarError(msg) {
+  document.getElementById('errorBox').innerHTML = '⚠️ ' + msg;
+  document.getElementById('errorBox').style.display = 'block';
+  document.getElementById('loadingInicial').style.display = 'none';
+  document.getElementById('contenidoPrincipal').style.display = 'block';
+}
+
+function renderizar(data) {
+  const total = data.length;
+  document.getElementById('totalVotos').textContent = total;
+
+  const resultados = PREGUNTAS_COMPLETAS.map((_, i) => {
+    let si = 0, no = 0;
+    data.forEach(v => {
+      const r = v.respuestas && v.respuestas[i];
+      if (r === 'Sí') si++;
+      else if (r === 'No') no++;
+    });
+    return { si, no };
+  });
+
+  const aprobados = resultados.filter(r => r.si > r.no).length;
+  const rechazados = resultados.filter(r => r.no > r.si).length;
+  const empates = resultados.filter(r => r.si === r.no).length;
+  document.getElementById('aprobadosTotal').textContent = aprobados + ' / ' + PREGUNTAS_COMPLETAS.length;
+
+  renderDona(aprobados, rechazados, empates);
+  renderBarras(resultados);
+  renderCards(resultados, total);
+}
+
+function renderDona(aprobados, rechazados, empates) {
+  document.getElementById('donaNumero').textContent = PREGUNTAS_COMPLETAS.length;
+  const ctx = document.getElementById('graficaDona').getContext('2d');
+  if (chartDona) chartDona.destroy();
+  chartDona = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Aprobados', 'No aprobados', 'Empate'],
+      datasets: [{
+        data: [aprobados, rechazados, empates],
+        backgroundColor: ['#2d9166','#e05050','#c4992a'],
+        borderColor: ['#1a6b4a','#c0392b','#a07820'],
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} proyecto${ctx.raw !== 1 ? 's' : ''}` } }
+      }
+    }
+  });
+
+  const colores = ['#2d9166','#e05050','#c4992a'];
+  const labels = ['Aprobados','No aprobados','Empate'];
+  const valores = [aprobados, rechazados, empates];
+  const total = PREGUNTAS_COMPLETAS.length;
+  document.getElementById('leyendaDona').innerHTML = labels.map((l, i) => `
+    <li class="leyenda-item">
+      <span class="leyenda-punto" style="background:${colores[i]}"></span>
+      <span class="leyenda-nombre">${l}</span>
+      <span class="leyenda-pct">${valores[i]} (${total ? Math.round(valores[i]/total*100) : 0}%)</span>
+    </li>`).join('');
+}
+
+function renderBarras(resultados) {
+  const ctx = document.getElementById('graficaBarras').getContext('2d');
+  if (chartBarras) chartBarras.destroy();
+  chartBarras = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: PREGUNTAS_CORTAS,
+      datasets: [
+        { label: '✓ Sí', data: resultados.map(r => r.si), backgroundColor: 'rgba(45,145,102,0.85)', borderColor: '#1a6b4a', borderWidth: 1, borderRadius: 6, borderSkipped: false },
+        { label: '✗ No', data: resultados.map(r => r.no), backgroundColor: 'rgba(224,80,80,0.85)', borderColor: '#c0392b', borderWidth: 1, borderRadius: 6, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'DM Sans', size: 13 }, color: '#4a6355', padding: 16, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} voto${ctx.raw !== 1 ? 's' : ''}` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#4a6355' } },
+        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'DM Sans', size: 11 }, color: '#4a6355' }, grid: { color: '#e8f5ef' } }
+      }
+    }
+  });
+}
+
+function renderCards(resultados, totalVotos) {
+  const grid = document.getElementById('preguntasGrid');
+  if (totalVotos === 0) {
+    grid.innerHTML = `<div class="estado-vacio" style="grid-column:1/-1"><div class="icono">🗳️</div><p>Aún no hay votos registrados.</p></div>`;
+    return;
+  }
+  grid.innerHTML = resultados.map((r, i) => {
+    const respondieron = r.si + r.no;
+    const pctSi = respondieron ? Math.round((r.si / respondieron) * 100) : 0;
+    const pctNo = respondieron ? 100 - pctSi : 0;
+    const gana = r.si > r.no ? 'si' : r.no > r.si ? 'no' : 'empate';
+    const badgeTexto = gana === 'si' ? '✓ Aprobado' : gana === 'no' ? '✗ No aprobado' : '= Empate';
+    return `
+      <div class="pregunta-card">
+        <div class="pcard-header">
+          <div class="pcard-titulo">${PREGUNTAS_COMPLETAS[i]}</div>
+          <span class="pcard-num">P${i+1}</span>
+        </div>
+        <span class="ganador-badge ganador-${gana}">${badgeTexto}</span>
+        <div class="barra-fila">
+          <span class="barra-etiqueta" style="color:var(--verde)">Sí</span>
+          <div class="barra-bg"><div class="barra-fill barra-si" style="width:${pctSi}%">${pctSi > 18 ? pctSi+'%' : ''}</div></div>
+          <span class="barra-num">${r.si} voto${r.si !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="barra-fila">
+          <span class="barra-etiqueta" style="color:var(--rojo)">No</span>
+          <div class="barra-bg"><div class="barra-fill barra-no" style="width:${pctNo}%">${pctNo > 18 ? pctNo+'%' : ''}</div></div>
+          <span class="barra-num">${r.no} voto${r.no !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="votos-total">${respondieron} de ${totalVotos} voto${totalVotos !== 1 ? 's' : ''}</div>
+      </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

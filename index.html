@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Votación Condominio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #1a6b4a;
+    --verde-claro: #e8f5ef;
+    --verde-medio: #2d9166;
+    --oro: #c4992a;
+    --oro-claro: #faf3e0;
+    --texto: #1c2b22;
+    --texto-suave: #4a6355;
+    --borde: #c8ddd3;
+    --bg: #f5f9f6;
+    --blanco: #ffffff;
+    --sombra: 0 2px 20px rgba(26,107,74,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--verde);
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 150px; height: 150px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+  }
+  .logo-icono {
+    font-size: 36px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    margin-bottom: 6px;
+  }
+  header p {
+    font-size: 14px;
+    opacity: 0.8;
+    font-weight: 300;
+  }
+
+  .badge-instruccion {
+    background: var(--oro-claro);
+    border: 1px solid #e6d49a;
+    border-left: 4px solid var(--oro);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 24px 20px;
+    font-size: 13.5px;
+    color: #5a4010;
+    line-height: 1.6;
+  }
+  .badge-instruccion strong { color: #3a2800; }
+
+  .form-container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+  }
+
+  /* Sección de identificación */
+  .id-card {
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    border-top: 4px solid var(--verde);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--sombra);
+  }
+  .id-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--verde);
+    margin-bottom: 18px;
+  }
+  .campo-grupo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 480px) {
+    .campo-grupo { grid-template-columns: 1fr; }
+  }
+  .campo label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+  }
+  .campo input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--borde);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--texto);
+    background: var(--bg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .campo input:focus {
+    border-color: var(--verde-medio);
+    box-shadow: 0 0 0 3px rgba(45,145,102,0.12);
+    background: white;
+  }
+  .campo input.error { border-color: #d63b3b; }
+
+  /* Conteo de preguntas */
+  .conteo {
+    font-size: 12px;
+    color: var(--texto-suave);
+    text-align: center;
+    margin: 8px 0 16px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Tarjetas de pregunta */
+  .pregunta-card {
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 14px;
+    box-shadow: var(--sombra);
+    transition: border-color 0.2s;
+  }
+  .pregunta-card.respondida { border-left: 4px solid var(--verde-medio); }
+  .pregunta-card.sin-responder.validando { border-color: #e07070; background: #fff8f8; }
+
+  .num-pregunta {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--verde-medio);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+  .pregunta-titulo {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--texto);
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .pregunta-desc {
+    font-size: 13.5px;
+    color: var(--texto-suave);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .opciones {
+    display: flex;
+    gap: 10px;
+  }
+  .opcion {
+    flex: 1;
+    position: relative;
+  }
+  .opcion input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+  }
+  .opcion label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 10px;
+    border: 2px solid var(--borde);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .opcion label:hover { border-color: var(--verde-medio); background: var(--verde-claro); }
+  .opcion input:checked + label.si {
+    background: var(--verde-claro);
+    border-color: var(--verde-medio);
+    color: var(--verde);
+    font-weight: 600;
+  }
+  .opcion input:checked + label.no {
+    background: #fdecea;
+    border-color: #d65c5c;
+    color: #a83030;
+    font-weight: 600;
+  }
+  .check-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .opcion input:checked + label .check-icon {
+    background: currentColor;
+    color: white;
+  }
+
+  /* Barra de progreso */
+  .progreso-container {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    padding: 10px 0 4px;
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .progreso-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--texto-suave);
+    margin-bottom: 6px;
+  }
+  .progreso-barra-bg {
+    height: 5px;
+    background: var(--borde);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progreso-barra {
+    height: 100%;
+    background: linear-gradient(90deg, var(--verde-medio), var(--verde));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* Botón enviar */
+  .btn-enviar {
+    width: 100%;
+    padding: 16px;
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    margin-top: 10px;
+  }
+  .btn-enviar:hover:not(:disabled) { background: var(--verde-medio); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,107,74,0.25); }
+  .btn-enviar:active:not(:disabled) { transform: translateY(0); }
+  .btn-enviar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Error de validación global */
+  .alerta-error {
+    background: #fdecea;
+    border: 1px solid #f0a0a0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: #a02020;
+    margin: 12px 0;
+    display: none;
+  }
+  .alerta-error.visible { display: block; }
+
+  /* Pantalla de éxito */
+  .exito-pantalla {
+    display: none;
+    text-align: center;
+    padding: 60px 24px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .exito-pantalla.visible { display: block; }
+  .form-area.oculto { display: none; }
+  .icono-exito {
+    width: 72px; height: 72px;
+    background: var(--verde-claro);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 32px;
+  }
+  .exito-pantalla h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--verde);
+    margin-bottom: 12px;
+  }
+  .exito-pantalla p {
+    font-size: 15px;
+    color: var(--texto-suave);
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .nombre-confirmacion {
+    font-weight: 600;
+    color: var(--texto);
+  }
+
+  /* Loading */
+  .btn-enviar .spinner {
+    display: none;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  .btn-enviar.cargando .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--borde);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo-icono">🏡</span>
+  <h1>Votación de Proyectos</h1>
+  <p>Condominio — Asamblea de Residentes</p>
+</header>
+
+<div class="form-container">
+  <div class="badge-instruccion">
+    <strong>🔒 Encuesta finalizada.</strong> El período de votación cerró el <strong>29 de marzo de 2026</strong> con <strong>110 votos</strong> registrados. ¡Gracias por participar!
+  </div>
+
+  <div style="text-align:center;margin:18px 0 6px;">
+    <a href="stats.html" class="btn-enviar" style="display:inline-block;text-decoration:none;">📊 Ver resultados finales</a>
+  </div>
+
+  <div id="formArea" class="form-area oculto">
+
+    <!-- Identificación -->
+    <div class="id-card">
+      <h2>🪪 Sus datos</h2>
+      <div class="campo-grupo">
+        <div class="campo">
+          <label>Nombre completo</label>
+          <input type="text" id="nombre" placeholder="Ej. María López" autocomplete="name">
+        </div>
+        <div class="campo">
+          <label>Número de casa</label>
+          <input type="text" id="casa" placeholder="Ej. A-12">
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de progreso -->
+    <div class="progreso-container">
+      <div class="progreso-info">
+        <span id="progresoTexto">0 de 8 preguntas respondidas</span>
+        <span id="porcentaje">0%</span>
+      </div>
+      <div class="progreso-barra-bg">
+        <div class="progreso-barra" id="barraProgreso"></div>
+      </div>
+    </div>
+
+    <div id="preguntasContainer"></div>
+
+    <div class="alerta-error" id="alertaError"></div>
+
+    <button class="btn-enviar" id="btnEnviar" onclick="enviarVoto()">
+      <span class="spinner"></span>
+      Registrar mi voto
+    </button>
+  </div>
+
+  <div class="exito-pantalla" id="exitoPantalla">
+    <div class="icono-exito">✅</div>
+    <h2>¡Voto registrado!</h2>
+    <p>Gracias, <span class="nombre-confirmacion" id="nombreConfirmacion"></span>.</p>
+    <p>Su participación ha sido registrada correctamente. Los resultados serán presentados en la próxima asamblea.</p>
+  </div>
+</div>
+
+<footer>Votación segura del Condominio &bull; Solo un voto por casa</footer>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN — Pega aquí tu URL de Apps Script después de publicar
+// ============================================================
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzm60EJapIbXLUDv4-F-dFksH7NX5C082BS2y72jV_D85n-Cw1UabqpDhn1YRHKkF4Q/exec";
+// ============================================================
+
+const preguntas = [
+  {
+    titulo: "Pozo — Mantenimiento",
+    desc: "¿Está usted de acuerdo en realizar el mantenimiento preventivo y correctivo del pozo de agua del condominio?"
+  },
+  {
+    titulo: "Cambio de techo de casa club",
+    desc: "¿Aprueba usted la sustitución del techo de la casa club por deterioro o mejora estética?"
+  },
+  {
+    titulo: "Talud",
+    desc: "¿Apoya usted la realización de trabajos de estabilización y mantenimiento en el talud del condominio?"
+  },
+  {
+    titulo: "Cuarto para policías de garita",
+    desc: "¿Aprueba la construcción de un espacio digno y funcional para el personal de seguridad que labora en la garita?"
+  },
+  {
+    titulo: "Salones sociales detrás de casa club",
+    desc: "¿Apoya la construcción de salones sociales adicionales detrás de la casa club para uso de los residentes?"
+  },
+  {
+    titulo: "Políticas de arrendamiento",
+    desc: "¿Está usted de acuerdo en actualizar las políticas de arrendamiento para regular mejor el alquiler de unidades en el condominio?"
+  },
+  {
+    titulo: "Muro perimetral con vallas autosustentables",
+    desc: "¿Aprueba la instalación de un muro perimetral con vallas autosustentables como mejora de seguridad y plusvalía para el condominio?"
+  },
+  {
+    titulo: "Sistema de riego",
+    desc: "¿Está usted de acuerdo en realizar el mantenimiento, reparación o modernización del sistema de riego de las áreas comunes?"
+  }
+];
+
+// Renderizar preguntas
+const container = document.getElementById('preguntasContainer');
+preguntas.forEach((p, i) => {
+  const n = i + 1;
+  container.innerHTML += `
+    <div class="pregunta-card sin-responder" id="card${n}" data-index="${i}">
+      <div class="num-pregunta">Pregunta ${n} de ${preguntas.length}</div>
+      <div class="pregunta-titulo">${p.titulo}</div>
+      <div class="pregunta-desc">${p.desc}</div>
+      <div class="opciones">
+        <div class="opcion">
+          <input type="radio" name="p${n}" id="p${n}si" value="Sí" onchange="actualizarProgreso()">
+          <label for="p${n}si" class="si">
+            <span class="check-icon">✓</span> Sí, apruebo
+          </label>
+        </div>
+        <div class="opcion">
+          <input type="radio" name="p${n}" id="p${n}no" value="No" onchange="actualizarProgreso()">
+          <label for="p${n}no" class="no">
+            <span class="check-icon">✗</span> No apruebo
+          </label>
+        </div>
+      </div>
+    </div>
+  `;
+});
+
+function actualizarProgreso() {
+  let respondidas = 0;
+  preguntas.forEach((_, i) => {
+    const val = document.querySelector(`input[name="p${i+1}"]:checked`);
+    const card = document.getElementById(`card${i+1}`);
+    if (val) {
+      respondidas++;
+      card.classList.remove('sin-responder');
+      card.classList.add('respondida');
+    }
+  });
+  const pct = Math.round((respondidas / preguntas.length) * 100);
+  document.getElementById('barraProgreso').style.width = pct + '%';
+  document.getElementById('progresoTexto').textContent = `${respondidas} de ${preguntas.length} preguntas respondidas`;
+  document.getElementById('porcentaje').textContent = pct + '%';
+}
+
+function obtenerRespuestas() {
+  return preguntas.map((_, i) => {
+    const sel = document.querySelector(`input[name="p${i+1}"]:checked`);
+    return sel ? sel.value : null;
+  });
+}
+
+async function enviarVoto() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const casa = document.getElementById('casa').value.trim();
+  const respuestas = obtenerRespuestas();
+  const alerta = document.getElementById('alertaError');
+  let errores = [];
+
+  // Validación
+  document.getElementById('nombre').classList.remove('error');
+  document.getElementById('casa').classList.remove('error');
+  document.querySelectorAll('.pregunta-card').forEach(c => c.classList.remove('validando'));
+
+  if (!nombre) { errores.push('Por favor ingrese su nombre.'); document.getElementById('nombre').classList.add('error'); }
+  if (!casa) { errores.push('Por favor ingrese su número de casa.'); document.getElementById('casa').classList.add('error'); }
+
+  const sinResponder = respuestas.map((r, i) => r === null ? i + 1 : null).filter(x => x !== null);
+  if (sinResponder.length > 0) {
+    errores.push(`Faltan respuestas en: pregunta${sinResponder.length > 1 ? 's' : ''} ${sinResponder.join(', ')}.`);
+    sinResponder.forEach(n => {
+      document.getElementById(`card${n}`).classList.add('validando');
+    });
+  }
+
+  if (errores.length > 0) {
+    alerta.innerHTML = '⚠️ ' + errores.join(' ');
+    alerta.classList.add('visible');
+    alerta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  alerta.classList.remove('visible');
+
+  // Enviar
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  btn.classList.add('cargando');
+  btn.childNodes[btn.childNodes.length - 1].textContent = ' Enviando...';
+
+  const datos = { nombre, casa, respuestas };
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+    document.getElementById('nombreConfirmacion').textContent = nombre;
+    document.getElementById('formArea').classList.add('oculto');
+    document.getElementById('exitoPantalla').classList.add('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) {
+    alerta.innerHTML = '⚠️ Error al enviar. Verifique su conexión e intente de nuevo.';
+    alerta.classList.add('visible');
+    btn.disabled = false;
+    btn.classList.remove('cargando');
+    btn.childNodes[btn.childNodes.length - 1].textContent = ' Registrar mi voto';
+  }
+}
+</script>
+</body>
+</html>
